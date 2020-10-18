@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Authors>Béla Bokor</Authors>
+    <Company>Brain2CPU</Company>
+    <Description>The essence of MVVM</Description>
+    <Copyright>Copyrigth © Béla Bokor 2020</Copyright>
+    <PackageProjectUrl>https://brain2cpu.com/devtools.html</PackageProjectUrl>
+    <PackageReleaseNotes>First release</PackageReleaseNotes>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RootNamespace>Brain2CPU.MvvmEssence</RootNamespace>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>Brain2CPU.MvvmEssence.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="ObservableString.cs" />
+    <Compile Remove="ObservableStringCollection.cs" />
+  </ItemGroup>
+
+</Project>
