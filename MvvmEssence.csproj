@@ -7,12 +7,15 @@
     <Description>The essence of MVVM</Description>
     <Copyright>Copyrigth © Béla Bokor 2020</Copyright>
     <PackageProjectUrl>https://brain2cpu.com/devtools.html</PackageProjectUrl>
-    <PackageReleaseNotes>First release</PackageReleaseNotes>
+    <PackageReleaseNotes>Some access modifier changed</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RootNamespace>Brain2CPU.MvvmEssence</RootNamespace>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>Brain2CPU.MvvmEssence.snk</AssemblyOriginatorKeyFile>
+    <AssemblyVersion>1.0.1.0</AssemblyVersion>
+    <FileVersion>1.0.1.0</FileVersion>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>

@@ -25,9 +25,9 @@ namespace Brain2CPU.MvvmEssence
         
         private readonly Dictionary<string, IsValid> _fieldValidators = new Dictionary<string, IsValid>();
 
-        protected HashSet<string> InvalidFields { get; } = new HashSet<string>();
+        public HashSet<string> InvalidFields { get; } = new HashSet<string>();
 
-        protected bool IsObjectValid => InvalidFields.Count == 0;
+        public bool IsObjectValid => InvalidFields.Count == 0;
 
         protected T Get<T>(IsValid validator = null, [CallerMemberName] string propertyName = null) => Get(default(T), validator, propertyName);
 
