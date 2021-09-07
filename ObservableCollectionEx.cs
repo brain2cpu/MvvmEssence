@@ -8,7 +8,7 @@ namespace Brain2CPU.MvvmEssence
 {
     public class ObservableCollectionEx<T> : ObservableCollection<T> where T : INotifyPropertyChanged
     {
-        private bool _notificationSuppressed = false;
+        private bool _wasAnyNotificationSuppressed = false;
 
         private bool _suppressNotification = false;
         public bool SuppressNotification
@@ -21,10 +21,10 @@ namespace Brain2CPU.MvvmEssence
 
                 _suppressNotification = value;
 
-                if(!_suppressNotification && _notificationSuppressed)
+                if(!_suppressNotification && _wasAnyNotificationSuppressed)
                 {
                     OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-                    _notificationSuppressed = false;
+                    _wasAnyNotificationSuppressed = false;
                 }
             }
         }
@@ -56,7 +56,7 @@ namespace Brain2CPU.MvvmEssence
 
             if(SuppressNotification)
             {
-                _notificationSuppressed = true;
+                _wasAnyNotificationSuppressed = true;
                 return;
             }
 
@@ -141,11 +141,20 @@ namespace Brain2CPU.MvvmEssence
         {
             if(SuppressNotification)
             {
-                _notificationSuppressed = true;
+                _wasAnyNotificationSuppressed = true;
                 return;
             }
 
-            base.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, sender, sender));
+            // starting with XF 4.8 the fist version of the notification throws an exception
+            // System.ArgumentOutOfRangeException: 'Index was out of range. Must be non-negative and less than the size of the collection. Parameter name: index'
+            try
+            {
+                base.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, sender, sender));
+            }
+            catch
+            {
+                base.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            }
         }
     }
 }

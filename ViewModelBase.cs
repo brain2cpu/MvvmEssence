@@ -23,16 +23,16 @@ namespace Brain2CPU.MvvmEssence
         }
 
         //no backing field needed
-        protected bool Set<T>(T value, RelayCommandBase cmd, EqualityChecker<T> equalityChecker = null, [CallerMemberName] string propertyName = null) =>
-            Set(value, new[] {cmd}, equalityChecker, propertyName);
+        protected bool Set<T>(T value, RelayCommandBase command, EqualityChecker<T> equalityChecker = null, [CallerMemberName] string propertyName = null) =>
+            Set(value, new[] {command}, equalityChecker, propertyName);
 
-        protected bool Set<T>(T value, IEnumerable<RelayCommandBase> cmds, EqualityChecker<T> equalityChecker = null, [CallerMemberName] string propertyName = null)
+        protected bool Set<T>(T value, IEnumerable<RelayCommandBase> commands, EqualityChecker<T> equalityChecker = null, [CallerMemberName] string propertyName = null)
         {
             var b = Set(value, equalityChecker, propertyName);
 
             if(b)
             {
-                foreach(var cmd in cmds)
+                foreach(var cmd in commands)
                 {
                     cmd.RaiseCanExecuteChanged();
                 }
@@ -42,16 +42,16 @@ namespace Brain2CPU.MvvmEssence
         }
 
         //setter for backing field
-        protected bool Set<T>(ref T storage, T value, RelayCommandBase cmd, EqualityChecker<T> equalityChecker = null, [CallerMemberName] string propertyName = null) =>
-            Set(ref storage, value, new[] { cmd }, equalityChecker, propertyName);
+        protected bool Set<T>(ref T storage, T value, RelayCommandBase command, EqualityChecker<T> equalityChecker = null, [CallerMemberName] string propertyName = null) =>
+            Set(ref storage, value, new[] { command }, equalityChecker, propertyName);
 
-        protected bool Set<T>(ref T storage, T value, IEnumerable<RelayCommandBase> cmds, EqualityChecker<T> equalityChecker = null, [CallerMemberName] string propertyName = null)
+        protected bool Set<T>(ref T storage, T value, IEnumerable<RelayCommandBase> commands, EqualityChecker<T> equalityChecker = null, [CallerMemberName] string propertyName = null)
         {
             var b = Set(ref storage, value, equalityChecker, propertyName);
 
             if(b)
             {
-                foreach(var cmd in cmds)
+                foreach(var cmd in commands)
                 {
                     cmd.RaiseCanExecuteChanged();
                 }
@@ -61,7 +61,7 @@ namespace Brain2CPU.MvvmEssence
         }
 
         //command getters
-        private readonly Dictionary<string, RelayCommandBase> _commands = new Dictionary<string, RelayCommandBase>();
+        private readonly Dictionary<string, RelayCommandBase> _commands = new();
 
         protected RelayCommand Get(Action execute, Func<bool> canExecute = null, [CallerMemberName] string commandName = null)
         {
@@ -83,6 +83,25 @@ namespace Brain2CPU.MvvmEssence
             return nc;
         }
 
+        protected RelayCommandAsync Get(ActionAsync execute, Func<bool> canExecute = null, [CallerMemberName] string commandName = null)
+        {
+            if (_commands.TryGetValue(commandName, out RelayCommandBase c))
+                return (RelayCommandAsync)c;
+
+            var nc = new RelayCommandAsync(execute, canExecute);
+            _commands.Add(commandName, nc);
+            return nc;
+        }
+
+        protected RelayCommandAsync<T> Get<T>(ActionAsync<T> execute, Func<bool> canExecute = null, [CallerMemberName] string commandName = null)
+        {
+            if (_commands.TryGetValue(commandName, out RelayCommandBase c))
+                return (RelayCommandAsync<T>)c;
+
+            var nc = new RelayCommandAsync<T>(execute, canExecute);
+            _commands.Add(commandName, nc);
+            return nc;
+        }
 
         //stock busy flag
         private bool _isBusy = false;

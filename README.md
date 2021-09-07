@@ -45,6 +45,11 @@ public DateTime DateFrom
 public RelayCommand RefreshCommand => Get(Refresh, () => !IsBusy && DateFrom > DateTime.Now);
 ```
 
+with the same
+```CS
+private void Refresh() { ... }
+```
+
 ```ViewModelBase``` will take care of the storage and notifications.
 
 The ```Get``` method used in the property definition must have specified the generic type or the default value.
@@ -62,12 +67,24 @@ public DateTime DateTo
 
 The ```Get``` method used in the command definition has a first parameter of type ```Action``` or ```Action<T>``` and an optional canExecute ```Func<bool>``` parameter.
 
+For the case of an asynchronous method servicing a command, instead of a fire-and-forget approach ```async void Handler()``` you can use ```RelayCommandAsync``` with a 
+proper ```async Task HandlerAsync()```. Keep in mind that this is a syntactic sugar, the execution of the method won't be awaited, so handle all exceptions inside the method!
+
 The ```IsBusy``` property setter will call ```RaiseCanExecuteChanged``` for every command.
 
-There is a ```Get``` overload having a delegate parameter ```bool IsValid(object o)```, in this case every ```set``` will trigger a validaton, the global result is in the ```IsObjectValid ``` property, a collection of the names of the invalid properties is stored in ```InvalidFields```. If a validation againts the default values are required you must call the ```InitializeObject()``` method.
+There is a ```Get``` overload having a delegate parameter ```bool IsValid(object o)```, in this case every ```set``` will trigger a validaton, 
+the global result is in the ```IsObjectValid ``` property, a collection of the names of the invalid properties is stored in ```InvalidFields```. 
+If a validation againts the default values are required you must call the ```InitializeObject()``` method.
 
-In order to help in situations where asynchronous initialization is required during the view model construction there is a virtual method ```InitializeAsync``` called from the default constructor. **Important**: please pay attention to the fact that ```StartInitialization``` is called before the child class constructor is even started, so the auto-initialized constructor can be used only if the child constructor is empty or whatever initialization is done in it will not affect the async initialization. Otherwise you should use the constructor with a boolean parameter and start the initialization in the child class. The end of initialization can be observed using the ```IsInitialized``` property or/and by subscribing to the ```OnInitialized``` event.
+In order to help in situations where asynchronous initialization is required during the view model construction there is a virtual method ```InitializeAsync``` 
+called from the default constructor. **Important**: please pay attention to the fact that ```StartInitialization``` is called before the child class 
+constructor is even started, so the auto-initialized constructor can be used only if the child constructor is empty or whatever initialization is done in it 
+will not affect the async initialization. Otherwise you should use the constructor with a boolean parameter and start the initialization in the child class. 
+The end of initialization can be observed using the ```IsInitialized``` property or/and by subscribing to the ```OnInitialized``` event.
 
 ### ObservableCollectionEx
 
-This class is not strictly required for the MVVM pattern but it is very useful in many situations. It extends ```ObservableCollection``` restricting it to observable items and allows temporary notification suppression and range operations (```AddRange```, ```RemoveRange```). The main addition though is that the ```OnCollectionChanged``` event is triggered not only when the collection is changed (add/remove items) but also when an observable property of any contained item is modified.
+This class is not strictly required for the MVVM pattern but it is very useful in many situations. It extends ```ObservableCollection``` restricting it to 
+observable items and allows temporary notification suppression and range operations (```AddRange```, ```RemoveRange```). 
+The main addition though is that the ```OnCollectionChanged``` event is triggered not only when the collection is changed (add/remove items) but 
+also when an observable property of any contained item is modified.

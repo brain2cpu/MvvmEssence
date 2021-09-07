@@ -21,11 +21,11 @@ namespace Brain2CPU.MvvmEssence
         }
 
         //no backing field needed
-        private readonly Dictionary<string, object> _fieldValues = new Dictionary<string, object>();
+        private readonly Dictionary<string, object> _fieldValues = new();
         
-        private readonly Dictionary<string, IsValid> _fieldValidators = new Dictionary<string, IsValid>();
+        private readonly Dictionary<string, IsValid> _fieldValidators = new();
 
-        public HashSet<string> InvalidFields { get; } = new HashSet<string>();
+        public HashSet<string> InvalidFields { get; } = new();
 
         public bool IsObjectValid => InvalidFields.Count == 0;
 
