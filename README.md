@@ -1,6 +1,6 @@
 # MvvmEssence
 
-This is a .NET standard 2.0 library, can be used in WPF and Xamarin Forms projects as well.
+This is a .NET standard 2.0 library, can be used in WPF, Xamarin Forms and MAUI projects as well.
 
 ### Usage
 
@@ -88,3 +88,16 @@ This class is not strictly required for the MVVM pattern but it is very useful i
 observable items and allows temporary notification suppression and range operations (```AddRange```, ```RemoveRange```). 
 The main addition though is that the ```OnCollectionChanged``` event is triggered not only when the collection is changed (add/remove items) but 
 also when an observable property of any contained item is modified.
+
+### DiscoverComponents
+
+Another addition to the package, used mainly to help on component registration in MAUI DI engine.
+```CS
+var discover = new DiscoverComponents(typeof(MauiProgram).Assembly, 
+            false, 
+            "MyNamespace.Services", "MyNamespace.Views", "MyNamespace.ViewModels");
+        discover.RegisterItems(s => builder.Services.AddSingleton(s), 
+            t => builder.Services.AddTransient(t),
+            "ViewModel", "Page", "Service");
+```
+You can use the registration based on naming conventions or explicitly mark classes with ```RegisterAsTransientAttribute``` or ```RegisterAsSingletonAttribute```.
