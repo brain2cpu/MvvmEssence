@@ -93,6 +93,8 @@ public class ViewModelBase : ObservableObject
         return nc;
     }
 
+    public void NotifyAllCommands() => NotifyCommands(_commands.Values);
+
     //stock busy flag
     private bool _isBusy = false;
     public bool IsBusy
@@ -106,7 +108,7 @@ public class ViewModelBase : ObservableObject
             _isBusy = value;
             NotifyPropertyChanged();
 
-            NotifyCommands(_commands.Values);
+            NotifyAllCommands();
         }
     }
 
@@ -122,7 +124,7 @@ public class ViewModelBase : ObservableObject
             _isInitialized = value;
             NotifyPropertyChanged();
 
-            NotifyCommands(_commands.Values);
+            NotifyAllCommands();
         }
     }
 
