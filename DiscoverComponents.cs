@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 
@@ -10,14 +11,14 @@ public class DiscoverComponents
     private readonly List<Type> _singletonTypes = new();
     private readonly List<Type> _transientTypes = new();
 
-    public List<(Type type, bool isSingleton)> Types
+    public ReadOnlyCollection<(Type type, bool isSingleton)> Types
     {
         get
         {
             var result = new List<(Type type, bool isSingleton)>();
             result.AddRange(_singletonTypes.Select(x => (x, true)));
             result.AddRange(_transientTypes.Select(x => (x, false)));
-            return result;
+            return result.AsReadOnly();
         }
     }
 
@@ -33,54 +34,77 @@ public class DiscoverComponents
         }
     }
     
-    //use filters
-    public DiscoverComponents(Assembly assembly, bool useDefaultAsSingleton, params string[] limitToNamespaces)
+    //use filters, attributes has priority
+    public DiscoverComponents(Assembly assembly, bool useDefaultAsSingleton, string[] limitToNamespaces, string[] suffixes)
     {
-        foreach (var type in assembly.GetTypes())
+        if (limitToNamespaces == null)
+            throw new ArgumentNullException(nameof(limitToNamespaces));
+                                                                          // to skip some generated code
+        foreach (var type in assembly.GetTypes().Where(x => x.IsClass && !x.Name.Contains("<")))
         {
-            if(limitToNamespaces.All(x => !(type.Namespace ?? "").Contains(x)))
-                continue;
-
             if(type.GetCustomAttribute<RegisterAsTransientAttribute>() != null)
                 _transientTypes.Add(type);
+            
             else if(type.GetCustomAttribute<RegisterAsSingletonAttribute>() != null)
                 _singletonTypes.Add(type);
-            else if(useDefaultAsSingleton)
-                _singletonTypes.Add(type);
-            else
-                _transientTypes.Add(type);
+            
+            else if (limitToNamespaces.Contains(type.Namespace) && 
+                (suffixes == null || suffixes.Any(x => type.Name.EndsWith(x, StringComparison.Ordinal))))
+            {
+                if(useDefaultAsSingleton)
+                    _singletonTypes.Add(type);
+                else
+                    _transientTypes.Add(type);
+            }
         }
     }
 
-    public void RegisterItems(Action<Type> singletonHandler, Action<Type> transientHandler, params string[] suffixes)
+    //use lambda filters, attributes has priority
+    public DiscoverComponents(Assembly assembly, Func<Type, ClassRegistrationOption> predicate)
     {
-        foreach (var type in GetItemsWithSuffix(true, suffixes))
+        foreach (var type in assembly.GetTypes().Where(x => x.IsClass))
+        {
+            if (type.GetCustomAttribute<RegisterAsTransientAttribute>() != null)
+                _transientTypes.Add(type);
+
+            else if (type.GetCustomAttribute<RegisterAsSingletonAttribute>() != null)
+                _singletonTypes.Add(type);
+
+            else 
+            {
+                switch(predicate(type))
+                {
+                    case ClassRegistrationOption.AsSingleton:
+                        _singletonTypes.Add(type);
+                        break;
+
+                    case ClassRegistrationOption.AsTransient:
+                        _transientTypes.Add(type);
+                        break;
+                }
+            }
+        }
+    }
+
+    public void RegisterItems(Action<Type> singletonHandler, Action<Type> transientHandler)
+    {
+        foreach (var type in _singletonTypes)
         {
             singletonHandler(type);
         }
 
-        foreach (var type in GetItemsWithSuffix(false, suffixes))
+        foreach (var type in _transientTypes)
         {
             transientHandler(type);
         }
     }
+}
 
-    private IEnumerable<Type> GetItemsWithSuffix(bool isSingleton, string[] suffixes)
-    {
-        var types = isSingleton ? _singletonTypes : _transientTypes;
-
-        if (!suffixes.Any())
-            return types;
-
-        var list = new List<Type>();
-
-        foreach (var suffix in suffixes)
-        {
-            list.AddRange(types.Where(x => x.Name.EndsWith(suffix, StringComparison.InvariantCulture)).ToList());
-        }
-
-        return list;
-    }
+public enum ClassRegistrationOption
+{
+    Skip, 
+    AsSingleton,
+    AsTransient
 }
 
 [AttributeUsage(AttributeTargets.Class)]
