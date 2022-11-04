@@ -35,10 +35,12 @@ public class DiscoverComponents
     }
     
     //use filters, attributes has priority
-    public DiscoverComponents(Assembly assembly, bool useDefaultAsSingleton, string[] limitToNamespaces, string[] suffixes)
+    public DiscoverComponents(Assembly assembly, bool useDefaultAsSingleton, string[] limitToNamespaces, string[] suffixes = null)
     {
         if (limitToNamespaces == null)
             throw new ArgumentNullException(nameof(limitToNamespaces));
+
+        var nsChecker = new NamespaceInclusionChecker(limitToNamespaces);
                                                                           // to skip some generated code
         foreach (var type in assembly.GetTypes().Where(x => x.IsClass && !x.Name.Contains("<")))
         {
@@ -48,7 +50,7 @@ public class DiscoverComponents
             else if(type.GetCustomAttribute<RegisterAsSingletonAttribute>() != null)
                 _singletonTypes.Add(type);
             
-            else if (limitToNamespaces.Contains(type.Namespace) && 
+            else if (nsChecker.Includes(type.Namespace) && 
                 (suffixes == null || suffixes.Any(x => type.Name.EndsWith(x, StringComparison.Ordinal))))
             {
                 if(useDefaultAsSingleton)

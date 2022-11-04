@@ -91,13 +91,14 @@ also when an observable property of any contained item is modified.
 
 ### DiscoverComponents
 
-Another addition to the package, used mainly to help on component registration in MAUI DI engine.
+Another addition to the package, used mainly to help component registration in the MAUI DI engine.
 ```CS
 var discover = new DiscoverComponents(typeof(MauiProgram).Assembly, 
             false, 
-            "MyNamespace.Services", "MyNamespace.Views", "MyNamespace.ViewModels");
-        discover.RegisterItems(s => builder.Services.AddSingleton(s), 
-            t => builder.Services.AddTransient(t),
-            "ViewModel", "Page", "Service");
+            new[] { "MyNamespace.Services", "MyNamespace.Views.*", "MyNamespace.ViewModels.*" }, 
+            new[] { "Service", "Page", "ViewModels" });
+discover.RegisterItems(s => builder.Services.AddSingleton(s), 
+            t => builder.Services.AddTransient(t));
 ```
-You can use the registration based on naming conventions or explicitly mark classes with ```RegisterAsTransientAttribute``` or ```RegisterAsSingletonAttribute```.
+You can use the registration based on naming conventions, a selector method or explicitly marked classes with ```RegisterAsTransientAttribute``` or ```RegisterAsSingletonAttribute```.
+
