@@ -20,6 +20,7 @@
     <RepositoryUrl>https://github.com/brain2cpu/MvvmEssence</RepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <Title>MVVM Essence</Title>
+    <LangVersion>10</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
