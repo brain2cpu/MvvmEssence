@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -25,9 +26,36 @@ public class ObservableObject : INotifyPropertyChanged
         
     private readonly Dictionary<string, IsValid> _fieldValidators = new();
 
-    public HashSet<string> InvalidFields { get; } = new();
+    
+    private readonly HashSet<string> _invalidFields = new();
 
-    public bool IsObjectValid => InvalidFields.Count == 0;
+    public bool IsObjectValid => _invalidFields.Count == 0;
+
+    public IReadOnlyList<string> InvalidFields => _invalidFields.ToList();
+
+
+    private readonly HashSet<string> _changedFields = new();
+
+    public bool IsChanged => _changedFields.Count != 0;
+
+    public IReadOnlyList<string> ChangedFields => _changedFields.ToList();
+
+    public void ResetChanges()
+    {
+        _changedFields.Clear();
+        NotifyPropertyChanged(nameof(IsChanged));
+    }
+
+    private void AddChange(string name)
+    {
+        var firstChange = !_changedFields.Any();
+
+        _changedFields.Add(name); 
+
+        if (firstChange)
+            NotifyPropertyChanged(nameof(IsChanged));
+    }
+
 
     protected T Get<T>(IsValid validator = null, [CallerMemberName] string propertyName = null) => Get(default(T), validator, propertyName);
 
@@ -67,9 +95,11 @@ public class ObservableObject : INotifyPropertyChanged
         }
 
         if (b)
-            InvalidFields.Remove(propertyName);
+            _invalidFields.Remove(propertyName);
         else
-            InvalidFields.Add(propertyName);
+            _invalidFields.Add(propertyName);
+
+        NotifyPropertyChanged(nameof(IsObjectValid));
     }
 
     protected bool Set<T>(T value, EqualityChecker<T> equalityChecker = null, [CallerMemberName] string propertyName = null)
@@ -87,6 +117,7 @@ public class ObservableObject : INotifyPropertyChanged
             _fieldValues.Add(propertyName, value);
 
         NotifyPropertyChanged(propertyName);
+        AddChange(propertyName);
 
         return true;
     }
@@ -102,6 +133,7 @@ public class ObservableObject : INotifyPropertyChanged
         storage = value;
 
         NotifyPropertyChanged(propertyName);
+        AddChange(propertyName);
 
         return true;
     }
