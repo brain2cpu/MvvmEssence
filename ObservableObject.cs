@@ -36,12 +36,31 @@ public class ObservableObject : INotifyPropertyChanged
 
     private readonly HashSet<string> _changedFields = new();
 
-    public bool IsChanged => _changedFields.Count != 0;
+    public bool IsChanged
+    {
+        get
+        {
+            if (_changedFields.Count != 0)
+                return true;
+
+            foreach (var field in _fieldValues.Values)
+                if (field is ObservableObject oo && oo.IsChanged)
+                    return true;
+            
+            return false;
+        }
+    }
 
     public IReadOnlyList<string> ChangedFields => _changedFields.ToList();
 
     public void ResetChanges()
     {
+        foreach(var field in _fieldValues.Values)
+        {
+            if(field is ObservableObject oo)
+                oo.ResetChanges();
+        }
+
         _changedFields.Clear();
         NotifyPropertyChanged(nameof(IsChanged));
     }
