@@ -21,7 +21,7 @@ public class ViewModelTests
     } 
     
     [Fact]
-    public void ChangeNameCommand_Invoked_with_null_wit_exception_handler_Calls_the_handler()
+    public void ChangeNameCommand_Invoked_with_null_with_exception_handler_Calls_the_handler()
     {
         // arrange
         var initialValue = "Initial value";

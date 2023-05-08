@@ -11,8 +11,8 @@ public class DiscoverComponentsTests
         // Arrange
         var discoverComponents = new DiscoverComponents(GetType().Assembly);
 
-        Action<Type> singletonHandler = _ => singletonHandlerCalled = true;
-        Action<Type> transientHandler = _ => transientHandlerCalled = true;
+        void singletonHandler(Type _) => singletonHandlerCalled = true;
+        void transientHandler(Type _) => transientHandlerCalled = true;
 
         // Act
         discoverComponents.RegisterItems(singletonHandler, transientHandler);
@@ -56,8 +56,8 @@ public class DiscoverComponentsTests
         var discoverComponents = new DiscoverComponents(GetType().Assembly, false,
             new[] { "TestProject.ClassesUsedInReflection.Ns1.*" });
 
-        Action<Type> singletonHandler = _ => singletonHandlerCalled++;
-        Action<Type> transientHandler = _ => transientHandlerCalled++;
+        void singletonHandler(Type _) => singletonHandlerCalled++;
+        void transientHandler(Type _) => transientHandlerCalled++;
 
         // Act
         discoverComponents.RegisterItems(singletonHandler, transientHandler);
@@ -79,8 +79,8 @@ public class DiscoverComponentsTests
         var discoverComponents = new DiscoverComponents(GetType().Assembly, true,
             new[] { "TestProject.ClassesUsedInReflection.Ns1.*", "TestProject.ClassesUsedInReflection.Nsx" });
 
-        Action<Type> singletonHandler = _ => singletonHandlerCalled++;
-        Action<Type> transientHandler = _ => transientHandlerCalled++;
+        void singletonHandler(Type _) => singletonHandlerCalled++;
+        void transientHandler(Type _) => transientHandlerCalled++;
 
         // Act
         discoverComponents.RegisterItems(singletonHandler, transientHandler);
@@ -102,8 +102,8 @@ public class DiscoverComponentsTests
         var discoverComponents = new DiscoverComponents(GetType().Assembly, false,
             new[] { "TestProject.ClassesUsedInReflection.Ns1.*" }, new[] { "1" });
 
-        Action<Type> singletonHandler = _ => singletonHandlerCalled++;
-        Action<Type> transientHandler = _ => transientHandlerCalled++;
+        void singletonHandler(Type _) => singletonHandlerCalled++;
+        void transientHandler(Type _) => transientHandlerCalled++;
 
         // Act
         discoverComponents.RegisterItems(singletonHandler, transientHandler);
