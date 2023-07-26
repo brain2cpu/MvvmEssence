@@ -64,7 +64,7 @@ public class DiscoverComponents
     //use lambda filters, attributes has priority
     public DiscoverComponents(Assembly assembly, Func<Type, ClassRegistrationOption> predicate)
     {
-        foreach (var type in assembly.GetTypes().Where(x => x.IsClass))
+        foreach (var type in assembly.GetTypes().Where(x => x.IsClass && !x.Name.Contains("<")))
         {
             if (type.GetCustomAttribute<RegisterAsTransientAttribute>() != null)
                 _transientTypes.Add(type);

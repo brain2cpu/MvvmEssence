@@ -38,6 +38,10 @@ public class ObservableObject : INotifyPropertyChanged
 
     public bool IsChanged => _changedFields.Count != 0;
 
+    public bool IsPropertyChanged(string name) => _changedFields.Contains(name);
+
+    public bool IsPropertyValid(string name) => !_invalidFields.Contains(name);
+
     public IReadOnlyList<string> ChangedFields => _changedFields.ToList();
 
     public void ResetChanges()
@@ -61,7 +65,7 @@ public class ObservableObject : INotifyPropertyChanged
 
     protected T Get<T>(T defaultVal, IsValid validator = null, [CallerMemberName] string propertyName = null)
     {
-        if(_fieldValues.TryGetValue(propertyName, out object v))
+        if(_fieldValues.TryGetValue(propertyName!, out object v))
             return (T)v;
 
         _fieldValues.Add(propertyName, defaultVal);
@@ -106,7 +110,7 @@ public class ObservableObject : INotifyPropertyChanged
     {
         Validate(value, propertyName);
 
-        if (_fieldValues.TryGetValue(propertyName, out object v))
+        if (_fieldValues.TryGetValue(propertyName!, out object v))
         {
             if (equalityChecker?.Invoke((T)v, value) ?? EqualityComparer<T>.Default.Equals((T)v, value))
                 return false;
