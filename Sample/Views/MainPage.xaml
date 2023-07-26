@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:sample="clr-namespace:Sample"
+             xmlns:viewModels="clr-namespace:Sample.ViewModels"
+             x:Class="Sample.Views.MainPage"
+             x:DataType="viewModels:MainViewModel">
+
+    <ScrollView>
+        <Grid RowSpacing="45" ColumnSpacing="10"
+              RowDefinitions="Auto,Auto,Auto,Auto,Auto,*"
+              ColumnDefinitions="Auto,*"
+              Padding="30,0"
+              VerticalOptions="Center">
+
+            <Label Text="a = "
+                   HorizontalOptions="End" VerticalOptions="Center"
+                   Grid.Row="0" Grid.Column="0"/>
+            <Entry Text="{Binding A}"
+                   HorizontalOptions="Start" VerticalOptions="Center"
+                   WidthRequest="300"
+                   Grid.Row="0" Grid.Column="1"/>
+
+            <Label Text="b = "
+                   HorizontalOptions="End" VerticalOptions="Center"
+                   Grid.Row="1" Grid.Column="0"/>
+            <Entry Text="{Binding B}"
+                   HorizontalOptions="Start" VerticalOptions="Center"
+                   WidthRequest="300"
+                   Grid.Row="1" Grid.Column="1"/>
+
+            <Button Grid.Row="2" Grid.Column="0"
+                    Text="sqrt(a) = "
+                    Command="{Binding SquareRootCommand}"/>
+            <Label Grid.Row="2" Grid.Column="1"
+                   VerticalOptions="Center"
+                   Text="{Binding SquareRoot}"/>
+
+            <Button Grid.Row="3" Grid.Column="0"
+                    Text="a / b = "
+                    Command="{Binding DivideCommand}"/>
+            <Label Grid.Row="3" Grid.Column="1"
+                   VerticalOptions="Center"
+                   Text="{Binding Quotient}"/>
+
+            <Button Grid.Row="4" Grid.Column="1"
+                    Text="Long running op"
+                    WidthRequest="200"
+                    HorizontalOptions="Start"
+                    Command="{Binding LongRunningCommand}"/>
+
+            <ActivityIndicator Grid.Row="0" Grid.Column="0" Grid.RowSpan="6" Grid.ColumnSpan="2"
+                               IsRunning="{Binding IsBusy}"
+                               HeightRequest="200" WidthRequest="200"/>
+
+        </Grid>
+    </ScrollView>
+
+</ContentPage>

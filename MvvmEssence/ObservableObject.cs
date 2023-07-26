@@ -38,6 +38,10 @@ public class ObservableObject : INotifyPropertyChanged
 
     public bool IsChanged => _changedFields.Count != 0;
 
+    public bool IsPropertyChanged(string name) => _changedFields.Contains(name);
+
+    public bool IsPropertyValid(string name) => !_invalidFields.Contains(name);
+
     public IReadOnlyList<string> ChangedFields => _changedFields.ToList();
 
     public void ResetChanges()

@@ -24,21 +24,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="ObservableString.cs" />
-    <Compile Remove="ObservableStringCollection.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
     <None Include="mvvm_essence_128.png">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="README.md">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
 
