@@ -1,6 +1,7 @@
 # MvvmEssence
 
 This is a .NET standard 2.0 library, can be used in WPF, Xamarin Forms and MAUI projects as well.
+To help the adoption of this library a sample MAUI application was added, the few existing unit tests could also help.
 
 ### Usage
 
