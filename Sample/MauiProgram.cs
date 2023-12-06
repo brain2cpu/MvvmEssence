@@ -40,7 +40,9 @@ public static class MauiProgram
                 return ClassRegistrationOption.AsTransient;
             });
 
-        discover.RegisterItems(s => builder.Services.AddSingleton(s),
-            t => builder.Services.AddTransient(t));
+        discover.RegisterItems(sd => builder.Services.AddSingleton(sd),
+            td => builder.Services.AddTransient(td),
+            (sc, si) => builder.Services.AddSingleton(si, sc),
+            (tc, ti) => builder.Services.AddTransient(ti, tc));
     }
 }
