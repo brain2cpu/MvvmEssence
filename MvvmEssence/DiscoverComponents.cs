@@ -34,7 +34,7 @@ public class DiscoverComponents
         var interfaces = assembly.GetTypes().Where(x => x.IsInterface).ToList();
 
         List<ClassInterface>? addTo = null;
-        foreach (var type in assembly.GetTypes().Where(x => x.IsClass && !x.Name.Contains("<")))
+        foreach (var type in assembly.GetTypes().Where(x => x.IsClass && !x.IsAbstract && !x.Name.Contains("<")))
         {
             if (type.GetCustomAttribute<RegisterAsTransientAttribute>() != null)
                 addTo = _transientTypes;
@@ -44,6 +44,9 @@ public class DiscoverComponents
 
             else if (predicate != null)
             {
+                if (type.GetCustomAttribute<SkipRegistrationAttribute>() != null)
+                    continue;
+
                 switch (predicate(type))
                 {
                     case ClassRegistrationOption.AsSingleton:
@@ -106,6 +109,11 @@ public enum ClassRegistrationOption
     Skip, 
     AsSingleton,
     AsTransient
+}
+
+[AttributeUsage(AttributeTargets.Class)]
+public class SkipRegistrationAttribute : Attribute
+{
 }
 
 [AttributeUsage(AttributeTargets.Class)]

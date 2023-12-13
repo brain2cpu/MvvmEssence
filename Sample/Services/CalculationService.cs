@@ -1,9 +1,10 @@
 ﻿using Brain2CPU.MvvmEssence;
+using Sample.Interfaces;
 
 namespace Sample.Services;
 
 [RegisterAsSingleton]
-public class CalculationService
+public class CalculationService : ICalculationService
 {
     public double Sqrt(string v)
     {

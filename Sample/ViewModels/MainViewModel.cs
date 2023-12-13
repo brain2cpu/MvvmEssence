@@ -1,14 +1,14 @@
 ﻿using System.Diagnostics;
 using Brain2CPU.MvvmEssence;
-using Sample.Services;
+using Sample.Interfaces;
 
 namespace Sample.ViewModels;
 
 public class MainViewModel : ViewModelBase
 {
-    private readonly CalculationService _calc;
+    private readonly ICalculationService _calc;
 
-    public MainViewModel(CalculationService calc)
+    public MainViewModel(ICalculationService calc)
     {
         _calc = calc;
 
@@ -51,7 +51,7 @@ public class MainViewModel : ViewModelBase
     private static double ConvertAndDivide(string a, string b)
     {
         // simulate an exception, without any handling the app will crash
-        if (b.EndsWith("0"))
+        if (b.EndsWith('0'))
             throw new ArgumentException("Simulated exception when B ends with 0", nameof(b));
 
         return double.Parse(a) / double.Parse(b);

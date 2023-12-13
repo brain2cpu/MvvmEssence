@@ -1,4 +1,4 @@
-﻿namespace MvvmEssenceTest;
+﻿namespace TestProject;
 
 public class DiscoverComponentsTests
 {
