@@ -13,9 +13,9 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>Brain2CPU.MvvmEssence.snk</AssemblyOriginatorKeyFile>
-    <AssemblyVersion>1.4.1</AssemblyVersion>
-    <FileVersion>1.4.1</FileVersion>
-    <Version>1.4.1</Version>
+    <AssemblyVersion>1.4.2</AssemblyVersion>
+    <FileVersion>1.4.2</FileVersion>
+    <Version>1.4.2</Version>
     <PackageIcon>mvvm_essence_128.png</PackageIcon>
     <RepositoryUrl>https://github.com/brain2cpu/MvvmEssence</RepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
