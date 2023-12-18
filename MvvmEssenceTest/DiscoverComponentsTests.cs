@@ -5,113 +5,98 @@ public class DiscoverComponentsTests
     [Fact]
     public void RegisterItems_AttributeOnlyConstructor()
     {
-        bool singletonHandlerCalled = false;
-        bool transientHandlerCalled = false;
+        var singletonHandlerCalled = false;
+        var singletonDirectHandlerCalled = false;
+        var transientHandlerCalled = false;
+        var transientDirectHandlerCalled = false;
 
         // Arrange
         var discoverComponents = new DiscoverComponents(GetType().Assembly);
 
-        void singletonHandler(Type _) => singletonHandlerCalled = true;
-        void transientHandler(Type _) => transientHandlerCalled = true;
+        void SingletonHandler(Type _, Type _1) => singletonHandlerCalled = true;
+        void SingletonDirectHandler(Type _) => singletonDirectHandlerCalled = true;
+        void TransientHandler(Type _, Type _1) => transientHandlerCalled = true;
+        void TransientDirectHandler(Type _) => transientDirectHandlerCalled = true;
 
         // Act
-        discoverComponents.RegisterItems(singletonHandler, transientHandler);
+        discoverComponents.RegisterItems(SingletonDirectHandler, TransientDirectHandler, SingletonHandler, TransientHandler);
 
         // Assert
         Assert.Equal(1, discoverComponents.Types.Count(x => x.isSingleton));
         Assert.Equal(1, discoverComponents.Types.Count(x => !x.isSingleton));
-        Assert.True(singletonHandlerCalled);
-        Assert.True(transientHandlerCalled);
+        Assert.True(singletonDirectHandlerCalled);
+        Assert.False(singletonHandlerCalled);
+        Assert.True(transientDirectHandlerCalled);
+        Assert.False(transientHandlerCalled);
     }
 
     [Fact]
-    public void RegisterItems_StringFilterBasedConstructor_SingleNsFilter()
+    public void RegisterItems_FilterBasedConstructor_UseInterfaces()
     {
-        int singletonHandlerCalled = 0; 
-        int transientHandlerCalled = 0;
+        var singletonDirectHandlerCalled = 0; 
+        var singletonHandlerCalled = 0; 
+        var transientDirectHandlerCalled = 0;
+        var transientHandlerCalled = 0;
 
         // Arrange
-        var discoverComponents = new DiscoverComponents(GetType().Assembly, false, new []{ "TestProject.ClassesUsedInReflection.Ns1" });
+        var discoverComponents = new DiscoverComponents(GetType().Assembly, type =>
+        {
+            if (type.Namespace is not ("TestProject.ClassesUsedInReflection.Ns1" or "TestProject.ClassesUsedInReflection.Nsx"))
+                return ClassRegistrationOption.Skip;
 
-        void SingletonHandler(Type _) => singletonHandlerCalled++;
-        void TransientHandler(Type _) => transientHandlerCalled++;
+            if (!type.Name.EndsWith("1"))
+                return ClassRegistrationOption.Skip;
+
+            // default mode
+            return ClassRegistrationOption.AsTransient;
+        });
+
+        void SingletonDirectHandler(Type _) => singletonDirectHandlerCalled++;
+        void SingletonHandler(Type _, Type _1) => singletonHandlerCalled++;
+        void TransientDirectHandler(Type _) => transientDirectHandlerCalled++;
+        void TransientHandler(Type _, Type _1) => transientHandlerCalled++;
 
         // Act
-        discoverComponents.RegisterItems(SingletonHandler, TransientHandler);
+        discoverComponents.RegisterItems(SingletonDirectHandler, TransientDirectHandler, SingletonHandler, TransientHandler);
 
         // Assert
         Assert.Equal(1, discoverComponents.Types.Count(x => x.isSingleton));
         Assert.Equal(2, discoverComponents.Types.Count(x => !x.isSingleton));
-        Assert.Equal(1, singletonHandlerCalled);
-        Assert.Equal(2, transientHandlerCalled);
-    }
-
-    [Fact]
-    public void RegisterItems_StringFilterBasedConstructor_RecursiveNsFilter()
-    {
-        int singletonHandlerCalled = 0;
-        int transientHandlerCalled = 0;
-
-        // Arrange
-        var discoverComponents = new DiscoverComponents(GetType().Assembly, false,
-            new[] { "TestProject.ClassesUsedInReflection.Ns1.*" });
-
-        void singletonHandler(Type _) => singletonHandlerCalled++;
-        void transientHandler(Type _) => transientHandlerCalled++;
-
-        // Act
-        discoverComponents.RegisterItems(singletonHandler, transientHandler);
-
-        // Assert
-        Assert.Equal(1, discoverComponents.Types.Count(x => x.isSingleton));
-        Assert.Equal(3, discoverComponents.Types.Count(x => !x.isSingleton));
-        Assert.Equal(1, singletonHandlerCalled);
-        Assert.Equal(3, transientHandlerCalled);
-    }
-
-    [Fact]
-    public void RegisterItems_StringFilterBasedConstructor_MultiNsFilter()
-    {
-        int singletonHandlerCalled = 0;
-        int transientHandlerCalled = 0;
-
-        // Arrange
-        var discoverComponents = new DiscoverComponents(GetType().Assembly, true,
-            new[] { "TestProject.ClassesUsedInReflection.Ns1.*", "TestProject.ClassesUsedInReflection.Nsx" });
-
-        void singletonHandler(Type _) => singletonHandlerCalled++;
-        void transientHandler(Type _) => transientHandlerCalled++;
-
-        // Act
-        discoverComponents.RegisterItems(singletonHandler, transientHandler);
-
-        // Assert
-        Assert.Equal(4, discoverComponents.Types.Count(x => x.isSingleton));
-        Assert.Equal(1, discoverComponents.Types.Count(x => !x.isSingleton));
-        Assert.Equal(4, singletonHandlerCalled);
+        Assert.Equal(1, singletonDirectHandlerCalled);
+        Assert.Equal(0, singletonHandlerCalled);
+        Assert.Equal(1, transientDirectHandlerCalled);
         Assert.Equal(1, transientHandlerCalled);
     }
 
     [Fact]
-    public void RegisterItems_StringFilterBasedConstructor_RecursiveNsFilterAndNameSuffix()
+    public void RegisterItems_FilterBasedConstructor_IgnoreInterfaces()
     {
-        int singletonHandlerCalled = 0;
-        int transientHandlerCalled = 0;
+        var singletonDirectHandlerCalled = 0; 
+        var transientDirectHandlerCalled = 0;
 
         // Arrange
-        var discoverComponents = new DiscoverComponents(GetType().Assembly, false,
-            new[] { "TestProject.ClassesUsedInReflection.Ns1.*" }, new[] { "1" });
+        var discoverComponents = new DiscoverComponents(GetType().Assembly, type =>
+        {
+            if (type.Namespace is not ("TestProject.ClassesUsedInReflection.Ns1" or "TestProject.ClassesUsedInReflection.Nsx"))
+                return ClassRegistrationOption.Skip;
 
-        void singletonHandler(Type _) => singletonHandlerCalled++;
-        void transientHandler(Type _) => transientHandlerCalled++;
+            if (!type.Name.EndsWith("1"))
+                return ClassRegistrationOption.Skip;
+
+            // default mode
+            return ClassRegistrationOption.AsTransient;
+        });
+
+        void SingletonDirectHandler(Type _) => singletonDirectHandlerCalled++;
+        void TransientDirectHandler(Type _) => transientDirectHandlerCalled++;
 
         // Act
-        discoverComponents.RegisterItems(singletonHandler, transientHandler);
+        discoverComponents.RegisterItems(SingletonDirectHandler, TransientDirectHandler);
 
         // Assert
         Assert.Equal(1, discoverComponents.Types.Count(x => x.isSingleton));
         Assert.Equal(2, discoverComponents.Types.Count(x => !x.isSingleton));
-        Assert.Equal(1, singletonHandlerCalled);
-        Assert.Equal(2, transientHandlerCalled);
+        Assert.Equal(1, singletonDirectHandlerCalled);
+        Assert.Equal(2, transientDirectHandlerCalled);
     }
-}
+ }

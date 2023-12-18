@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -8,105 +9,112 @@ namespace Brain2CPU.MvvmEssence;
 
 public class DiscoverComponents
 {
-    private readonly List<Type> _singletonTypes = new();
-    private readonly List<Type> _transientTypes = new();
+    private readonly List<ClassInterface> _singletonTypes = new();
+    private readonly List<ClassInterface> _transientTypes = new();
 
-    public ReadOnlyCollection<(Type type, bool isSingleton)> Types
+    public ReadOnlyCollection<(ClassInterface type, bool isSingleton)> Types
     {
         get
         {
-            var result = new List<(Type type, bool isSingleton)>();
+            var result = new List<(ClassInterface type, bool isSingleton)>();
             result.AddRange(_singletonTypes.Select(x => (x, true)));
             result.AddRange(_transientTypes.Select(x => (x, false)));
             return result.AsReadOnly();
         }
     }
 
-    //use only explicitly marked classes
-    public DiscoverComponents(Assembly assembly)
-    {
-        foreach (var type in assembly.GetTypes())
-        {
-            if(type.GetCustomAttribute<RegisterAsTransientAttribute>() != null)
-                _transientTypes.Add(type);
-            else if(type.GetCustomAttribute<RegisterAsSingletonAttribute>() != null)
-                _singletonTypes.Add(type);
-        }
-    }
+    // use explicitly marked classes only
+    public DiscoverComponents(Assembly assembly) => Analyze(assembly, null, null);
+
+    // use filters, attributes have priority
+    public DiscoverComponents(Assembly assembly, Func<Type, ClassRegistrationOption>? predicate) => Analyze(assembly, null, predicate);
     
-    //use filters, attributes has priority
-    public DiscoverComponents(Assembly assembly, bool useDefaultAsSingleton, string[] limitToNamespaces, string[] suffixes = null)
-    {
-        if (limitToNamespaces == null)
-            throw new ArgumentNullException(nameof(limitToNamespaces));
+    public DiscoverComponents(Assembly assembly, Func<string, string, ClassRegistrationOption>? predicate) => Analyze(assembly, predicate, null);
 
-        var nsChecker = new NamespaceInclusionChecker(limitToNamespaces);
-                                                                          // to skip some generated code
-        foreach (var type in assembly.GetTypes().Where(x => x.IsClass && !x.Name.Contains("<")))
+    private void Analyze(Assembly assembly, Func<string, string, ClassRegistrationOption>? stringPredicate, Func<Type, ClassRegistrationOption>? typePredicate)
+    {
+        var interfaces = assembly.GetTypes().Where(x => x.IsInterface).ToList();
+
+        foreach (var type in assembly.GetTypes().Where(x => x.IsClass && !x.IsAbstract && !string.IsNullOrEmpty(x.Namespace) && !x.Name.Contains("<")))
         {
-            if(type.GetCustomAttribute<RegisterAsTransientAttribute>() != null)
-                _transientTypes.Add(type);
-            
-            else if(type.GetCustomAttribute<RegisterAsSingletonAttribute>() != null)
-                _singletonTypes.Add(type);
-            
-            else if (nsChecker.Includes(type.Namespace) && 
-                (suffixes == null || suffixes.Any(x => type.Name.EndsWith(x, StringComparison.Ordinal))))
-            {
-                if(useDefaultAsSingleton)
-                    _singletonTypes.Add(type);
-                else
-                    _transientTypes.Add(type);
-            }
+            var addTo = GetCategory(type, stringPredicate, typePredicate);
+
+            if (addTo == null)
+                continue;
+
+            var iType = type.GetInterfaces().FirstOrDefault(x => interfaces.Contains(x));
+            addTo.Add(new ClassInterface(type, iType));
         }
     }
 
-    //use lambda filters, attributes has priority
-    public DiscoverComponents(Assembly assembly, Func<Type, ClassRegistrationOption> predicate)
+    private List<ClassInterface>? GetCategory(Type type, Func<string, string, ClassRegistrationOption>? stringPredicate, Func<Type, ClassRegistrationOption>? typePredicate)
     {
-        foreach (var type in assembly.GetTypes().Where(x => x.IsClass && !x.Name.Contains("<")))
+        if (type.GetCustomAttribute<RegisterAsTransientAttribute>() != null)
+            return _transientTypes;
+
+        if (type.GetCustomAttribute<RegisterAsSingletonAttribute>() != null)
+            return _singletonTypes;
+
+        if (stringPredicate == null && typePredicate == null) 
+            return null;
+        
+        if (type.GetCustomAttribute<SkipRegistrationAttribute>() != null)
+            return null;
+
+        return (stringPredicate?.Invoke(type.Namespace, type.Name) ?? typePredicate?.Invoke(type)) switch
         {
-            if (type.GetCustomAttribute<RegisterAsTransientAttribute>() != null)
-                _transientTypes.Add(type);
-
-            else if (type.GetCustomAttribute<RegisterAsSingletonAttribute>() != null)
-                _singletonTypes.Add(type);
-
-            else 
-            {
-                switch(predicate(type))
-                {
-                    case ClassRegistrationOption.AsSingleton:
-                        _singletonTypes.Add(type);
-                        break;
-
-                    case ClassRegistrationOption.AsTransient:
-                        _transientTypes.Add(type);
-                        break;
-                }
-            }
-        }
+            ClassRegistrationOption.AsSingleton => _singletonTypes,
+            ClassRegistrationOption.AsTransient => _transientTypes,
+            _ => null
+        };
     }
 
-    public void RegisterItems(Action<Type> singletonHandler, Action<Type> transientHandler)
+    public void RegisterItems(Action<Type> singletonDirectHandler, Action<Type> transientDirectHandler, Action<Type, Type> singletonHandler, Action<Type, Type> transientHandler)
     {
         foreach (var type in _singletonTypes)
         {
-            singletonHandler(type);
+            if (type.Interface == null)
+                singletonDirectHandler?.Invoke(type.Class);
+            else
+                singletonHandler?.Invoke(type.Class, type.Interface);
         }
 
         foreach (var type in _transientTypes)
         {
-            transientHandler(type);
+            if(type.Interface == null)
+                transientDirectHandler?.Invoke(type.Class);
+            else
+                transientHandler?.Invoke(type.Class, type.Interface);
+        }
+    }
+
+    // ignores interfaces, register the class directly
+    public void RegisterItems(Action<Type> singletonDirectHandler, Action<Type> transientDirectHandler)
+    {
+        foreach (var type in _singletonTypes)
+        {
+            singletonDirectHandler?.Invoke(type.Class);
+        }
+
+        foreach (var type in _transientTypes)
+        {
+            transientDirectHandler?.Invoke(type.Class);
         }
     }
 }
+
+public record struct ClassInterface(Type Class, Type? Interface);
 
 public enum ClassRegistrationOption
 {
     Skip, 
     AsSingleton,
     AsTransient
+}
+
+[AttributeUsage(AttributeTargets.Class)]
+public class SkipRegistrationAttribute : Attribute
+{
 }
 
 [AttributeUsage(AttributeTargets.Class)]
