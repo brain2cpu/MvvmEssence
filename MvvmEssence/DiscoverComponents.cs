@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -23,49 +24,49 @@ public class DiscoverComponents
     }
 
     // use explicitly marked classes only
-    public DiscoverComponents(Assembly assembly) => Analyze(assembly, null);
-
+    public DiscoverComponents(Assembly assembly) => Analyze(assembly, null, null);
 
     // use filters, attributes have priority
-    public DiscoverComponents(Assembly assembly, Func<Type, ClassRegistrationOption>? predicate) => Analyze(assembly, predicate);
+    public DiscoverComponents(Assembly assembly, Func<Type, ClassRegistrationOption>? predicate) => Analyze(assembly, null, predicate);
+    
+    public DiscoverComponents(Assembly assembly, Func<string, string, ClassRegistrationOption>? predicate) => Analyze(assembly, predicate, null);
 
-    private void Analyze(Assembly assembly, Func<Type, ClassRegistrationOption>? predicate)
+    private void Analyze(Assembly assembly, Func<string, string, ClassRegistrationOption>? stringPredicate, Func<Type, ClassRegistrationOption>? typePredicate)
     {
         var interfaces = assembly.GetTypes().Where(x => x.IsInterface).ToList();
 
-        List<ClassInterface>? addTo = null;
-        foreach (var type in assembly.GetTypes().Where(x => x.IsClass && !x.IsAbstract && !x.Name.Contains("<")))
+        foreach (var type in assembly.GetTypes().Where(x => x.IsClass && !x.IsAbstract && !string.IsNullOrEmpty(x.Namespace) && !x.Name.Contains("<")))
         {
-            if (type.GetCustomAttribute<RegisterAsTransientAttribute>() != null)
-                addTo = _transientTypes;
-
-            else if (type.GetCustomAttribute<RegisterAsSingletonAttribute>() != null)
-                addTo = _singletonTypes;
-
-            else if (predicate != null)
-            {
-                if (type.GetCustomAttribute<SkipRegistrationAttribute>() != null)
-                    continue;
-
-                switch (predicate(type))
-                {
-                    case ClassRegistrationOption.AsSingleton:
-                        addTo = _singletonTypes;
-                        break;
-
-                    case ClassRegistrationOption.AsTransient:
-                        addTo = _transientTypes;
-                        break;
-                }
-            }
+            var addTo = GetCategory(type, stringPredicate, typePredicate);
 
             if (addTo == null)
                 continue;
 
             var iType = type.GetInterfaces().FirstOrDefault(x => interfaces.Contains(x));
             addTo.Add(new ClassInterface(type, iType));
-            addTo = null;
         }
+    }
+
+    private List<ClassInterface>? GetCategory(Type type, Func<string, string, ClassRegistrationOption>? stringPredicate, Func<Type, ClassRegistrationOption>? typePredicate)
+    {
+        if (type.GetCustomAttribute<RegisterAsTransientAttribute>() != null)
+            return _transientTypes;
+
+        if (type.GetCustomAttribute<RegisterAsSingletonAttribute>() != null)
+            return _singletonTypes;
+
+        if (stringPredicate == null && typePredicate == null) 
+            return null;
+        
+        if (type.GetCustomAttribute<SkipRegistrationAttribute>() != null)
+            return null;
+
+        return (stringPredicate?.Invoke(type.Namespace, type.Name) ?? typePredicate?.Invoke(type)) switch
+        {
+            ClassRegistrationOption.AsSingleton => _singletonTypes,
+            ClassRegistrationOption.AsTransient => _transientTypes,
+            _ => null
+        };
     }
 
     public void RegisterItems(Action<Type> singletonDirectHandler, Action<Type> transientDirectHandler, Action<Type, Type> singletonHandler, Action<Type, Type> transientHandler)
