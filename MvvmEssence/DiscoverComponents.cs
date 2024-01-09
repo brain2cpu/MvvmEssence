@@ -37,35 +37,51 @@ public class DiscoverComponents
 
         foreach (var type in assembly.GetTypes().Where(x => x.IsClass && !x.IsAbstract && !string.IsNullOrEmpty(x.Namespace) && !x.Name.Contains("<")))
         {
-            var addTo = GetCategory(type, stringPredicate, typePredicate);
+            var (addTo, iName) = GetCategory(type, stringPredicate, typePredicate);
 
             if (addTo == null)
                 continue;
 
-            var iType = type.GetInterfaces().FirstOrDefault(x => interfaces.Contains(x));
+            Type? iType = iName switch
+            {
+                null => type.GetInterfaces().FirstOrDefault(x => interfaces.Contains(x)),
+                "" => null,
+                _ => type.GetInterfaces().FirstOrDefault(x => string.Equals(x.Name, iName, StringComparison.Ordinal))
+            };
+
             addTo.Add(new ClassInterface(type, iType));
         }
     }
 
-    private List<ClassInterface>? GetCategory(Type type, Func<string, string, ClassRegistrationOption>? stringPredicate, Func<Type, ClassRegistrationOption>? typePredicate)
+    private (List<ClassInterface>? list, string? interfaceName) GetCategory(Type type, Func<string, string, ClassRegistrationOption>? stringPredicate, Func<Type, ClassRegistrationOption>? typePredicate)
     {
+        if (type.GetCustomAttribute<SkipRegistrationAttribute>() != null)
+            return (null, null);
+
+        string? interfaceName = null;  // use any available
+        if (type.GetCustomAttribute<IgnoreInterfaceForRegistrationAttribute>() != null)
+            interfaceName = "";        // ignore
+        else
+        {
+            var i = type.GetCustomAttribute<UseInterfaceForRegistrationAttribute>();
+            if (i != null)
+                interfaceName = i.Name;  // use specified
+        }
+
         if (type.GetCustomAttribute<RegisterAsTransientAttribute>() != null)
-            return _transientTypes;
+            return (_transientTypes, interfaceName);
 
         if (type.GetCustomAttribute<RegisterAsSingletonAttribute>() != null)
-            return _singletonTypes;
+            return (_singletonTypes, interfaceName);
 
         if (stringPredicate == null && typePredicate == null) 
-            return null;
+            return (null, null);
         
-        if (type.GetCustomAttribute<SkipRegistrationAttribute>() != null)
-            return null;
-
         return (stringPredicate?.Invoke(type.Namespace, type.Name) ?? typePredicate?.Invoke(type)) switch
         {
-            ClassRegistrationOption.AsSingleton => _singletonTypes,
-            ClassRegistrationOption.AsTransient => _transientTypes,
-            _ => null
+            ClassRegistrationOption.AsSingleton => (_singletonTypes, interfaceName),
+            ClassRegistrationOption.AsTransient => (_transientTypes, interfaceName),
+            _ => (null, null)
         };
     }
 
@@ -81,7 +97,7 @@ public class DiscoverComponents
 
         foreach (var type in _transientTypes)
         {
-            if(type.Interface == null)
+            if (type.Interface == null)
                 transientDirectHandler?.Invoke(type.Class);
             else
                 transientHandler?.Invoke(type.Class, type.Interface);
@@ -110,6 +126,18 @@ public enum ClassRegistrationOption
     Skip, 
     AsSingleton,
     AsTransient
+}
+
+[AttributeUsage(AttributeTargets.Class)]
+public class IgnoreInterfaceForRegistrationAttribute : Attribute
+{
+}
+
+[AttributeUsage(AttributeTargets.Class)]
+public class UseInterfaceForRegistrationAttribute : Attribute
+{
+    public string Name { get; }
+    public UseInterfaceForRegistrationAttribute(string name) => Name = name;
 }
 
 [AttributeUsage(AttributeTargets.Class)]

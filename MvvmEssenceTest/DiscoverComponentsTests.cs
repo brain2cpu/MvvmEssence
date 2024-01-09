@@ -22,7 +22,7 @@ public class DiscoverComponentsTests
         discoverComponents.RegisterItems(SingletonDirectHandler, TransientDirectHandler, SingletonHandler, TransientHandler);
 
         // Assert
-        Assert.Equal(1, discoverComponents.Types.Count(x => x.isSingleton));
+        Assert.Equal(2, discoverComponents.Types.Count(x => x.isSingleton));
         Assert.Equal(1, discoverComponents.Types.Count(x => !x.isSingleton));
         Assert.True(singletonDirectHandlerCalled);
         Assert.False(singletonHandlerCalled);
@@ -60,9 +60,9 @@ public class DiscoverComponentsTests
         discoverComponents.RegisterItems(SingletonDirectHandler, TransientDirectHandler, SingletonHandler, TransientHandler);
 
         // Assert
-        Assert.Equal(1, discoverComponents.Types.Count(x => x.isSingleton));
+        Assert.Equal(2, discoverComponents.Types.Count(x => x.isSingleton));
         Assert.Equal(2, discoverComponents.Types.Count(x => !x.isSingleton));
-        Assert.Equal(1, singletonDirectHandlerCalled);
+        Assert.Equal(2, singletonDirectHandlerCalled);
         Assert.Equal(0, singletonHandlerCalled);
         Assert.Equal(1, transientDirectHandlerCalled);
         Assert.Equal(1, transientHandlerCalled);
@@ -94,9 +94,9 @@ public class DiscoverComponentsTests
         discoverComponents.RegisterItems(SingletonDirectHandler, TransientDirectHandler);
 
         // Assert
-        Assert.Equal(1, discoverComponents.Types.Count(x => x.isSingleton));
+        Assert.Equal(2, discoverComponents.Types.Count(x => x.isSingleton));
         Assert.Equal(2, discoverComponents.Types.Count(x => !x.isSingleton));
-        Assert.Equal(1, singletonDirectHandlerCalled);
+        Assert.Equal(2, singletonDirectHandlerCalled);
         Assert.Equal(2, transientDirectHandlerCalled);
     }
  }
