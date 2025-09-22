@@ -1,35 +1,40 @@
 ﻿using System.Diagnostics;
+using Brain2CPU.ApiClient;
 using Brain2CPU.MvvmEssence;
 using Sample.Interfaces;
+using Sample.Models;
+using Sample.ViewModels.Validators;
 
 namespace Sample.ViewModels;
 
 public class MainViewModel : ViewModelBase
 {
     private readonly ICalculationService _calc;
+    private readonly ApiClient _apiClient;
 
-    public MainViewModel(ICalculationService calc)
+    public MainViewModel(ICalculationService calc, ApiClient apiClient)
     {
         _calc = calc;
+        _apiClient = apiClient;
+
+        _apiClient.HttpClientName = "InsecureClient";
 
         ExceptionHandler += xcp => Debug.WriteLine(xcp.ToString());
     }
 
+    [Required]
+    [Number<double>]
     public string A
     {
-        get => Get("0", o => double.TryParse((string)o, out _));
-        set => Set(value, new[] { SquareRootCommand, DivideCommand });
+        get => Get("0");
+        set => Set(value, [ SquareRootCommand, DivideCommand ]);
     }
 
+    [CustomValidation<NonZeroDoubleAsStringValidator>]
     public string B
     {
-        get => Get("0", NonZeroDoubleAsStringValidator);
+        get => Get("0");
         set => Set(value, DivideCommand);
-    }
-
-    private bool NonZeroDoubleAsStringValidator(object o)
-    {
-        return double.TryParse((string)o, out var d) && Math.Abs(d) > 1E-6;
     }
 
     public double SquareRoot
@@ -44,9 +49,11 @@ public class MainViewModel : ViewModelBase
         set => Set(value);
     }
 
-    public RelayCommand SquareRootCommand => GetTemplated(() => SquareRoot = _calc.Sqrt(A), () => !IsBusy && IsPropertyValid(nameof(A)));
+    public RelayCommand SquareRootCommand => GetTemplated(() 
+        => SquareRoot = _calc.Sqrt(A), () => !IsBusy && IsPropertyValid(nameof(A)));
 
-    public RelayCommand DivideCommand => Get(() => Quotient = ConvertAndDivide(A, B), () => !IsBusy && IsObjectValid);
+    public RelayCommand DivideCommand 
+        => Get(() => Quotient = ConvertAndDivide(A, B), () => !IsBusy && IsObjectValid);
 
     private static double ConvertAndDivide(string a, string b)
     {
@@ -57,10 +64,31 @@ public class MainViewModel : ViewModelBase
         return double.Parse(a) / double.Parse(b);
     }
 
-    public RelayCommandAsync LongRunningCommand => GetTemplated(LongRunningAsync, () => !IsBusy);
+    public RelayCommandAsync LongRunningCommand => Get(LongRunningAsync, () => !IsBusy);
 
+    // ApiClient doesn't throw, no exception handling is needed
     private async Task LongRunningAsync()
     {
-        await Task.Delay(2000);
+        IsBusy = true;
+
+        using var request = new ApiRequest("https://jsonplaceholder.typicode.com/posts")
+        {
+            Method = HttpMethod.Post,
+        };
+        request.Headers.Add("ApiKey", "1234567890");
+        request.BuildJsonContent(new ApiPayload { Title = "foo", Body = "bar", UserId = 1 });
+        
+        var response = await _apiClient.SendRequestAsync<ApiPayload>(request);
+        
+        if(response.IsSuccess)
+        {
+            await Shell.Current.DisplayAlert("Success", response.Data.ToString(), "OK");
+        }
+        else
+        {
+            await Shell.Current.DisplayAlert("Failed", response.GetFullMessage(), "OK");
+        }
+
+        IsBusy = false;
     }
 }

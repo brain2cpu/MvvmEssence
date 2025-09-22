@@ -1,7 +1,6 @@
-﻿namespace Sample.Interfaces
+﻿namespace Sample.Interfaces;
+
+public interface ICalculationService
 {
-    public interface ICalculationService
-    {
-        double Sqrt(string v);
-    }
+    double Sqrt(string v);
 }

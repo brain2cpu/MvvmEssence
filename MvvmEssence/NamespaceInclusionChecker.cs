@@ -1,12 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-namespace Brain2CPU.MvvmEssence;
+﻿namespace Brain2CPU.MvvmEssence;
 
 public class NamespaceInclusionChecker
 {
-    private readonly HashSet<string> _topLevelNs = new ();
-    private readonly HashSet<string> _recursiveNs = new ();
+    private readonly HashSet<string> _topLevelNs = [];
+    private readonly HashSet<string> _recursiveNs = [];
 
     public NamespaceInclusionChecker(IEnumerable<string> list)
     {

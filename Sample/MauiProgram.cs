@@ -1,4 +1,5 @@
-﻿using Brain2CPU.MvvmEssence;
+﻿using Brain2CPU.ApiClient;
+using Brain2CPU.MvvmEssence;
 using Microsoft.Extensions.Logging;
 
 namespace Sample;
@@ -21,6 +22,20 @@ public static class MauiProgram
 #endif
 
         AutoRegisterServices(builder);
+
+
+        builder.Services.AddHttpClient("InsecureClient")
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (message, cert, chain, errors) =>
+                {
+                    // Skip server certificate validation
+                    return true;
+                }
+            });
+
+        builder.Services.AddHttpClient()
+            .AddSingleton<ApiClient>();
 
         return builder.Build();
     }

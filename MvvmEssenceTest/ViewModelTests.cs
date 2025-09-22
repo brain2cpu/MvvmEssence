@@ -1,4 +1,4 @@
-﻿namespace TestProject;
+﻿namespace MvvmEssenceTest;
 
 public class ViewModelTests
 {
@@ -8,9 +8,9 @@ public class ViewModelTests
         // arrange
         var initialValue = "Initial value";
 
-        var vm = new ViewModel
+        var vm = new TestViewModel
         {
-            Name = initialValue
+            LastName = initialValue
         };
 
         // act
@@ -27,9 +27,9 @@ public class ViewModelTests
         var initialValue = "Initial value";
         Exception? xcp = null;
 
-        var vm = new ViewModel
+        var vm = new TestViewModel
         {
-            Name = initialValue,
+            LastName = initialValue,
             ExceptionHandler = exception => xcp = exception
         };
 
@@ -48,16 +48,48 @@ public class ViewModelTests
         var initialValue = "Initial value";
         var finalValue = "New value";
 
-        var vm = new ViewModel
+        var vm = new TestViewModel
         {
-            Name = initialValue
+            LastName = initialValue
         };
 
         // act
         vm.ChangeNameCommand.Execute(finalValue);
 
         // assert
-        Assert.Equal(finalValue, vm.Name);
+        Assert.Equal(finalValue, vm.LastName);
         Assert.False(vm.IsBusy);
+    }
+
+    [Fact]
+    public void Set_NullableToNull_ShouldWork()
+    {
+        // arrange
+        var vm = new TestViewModel();
+        var oSt = vm.Status;
+
+        // act
+        vm.Status = null;
+
+        // assert
+        Assert.NotEmpty(oSt);
+        Assert.True(vm.IsChanged);
+        Assert.Null(vm.Status);
+    }
+
+    [Fact]
+    public void Set_NonNullableToNull_ShouldWork()
+    {
+        // arrange
+        var vm = new TestViewModel();
+        var oSt = vm.LastName;
+
+        // act
+        vm.LastName = null;
+
+        // assert
+        Assert.Empty(oSt);
+        Assert.True(vm.IsChanged);
+        Assert.Null(vm.LastName);
     }
 }

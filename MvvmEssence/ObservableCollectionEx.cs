@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -63,7 +62,7 @@ public class ObservableCollectionEx<T> : ObservableCollection<T> where T : INoti
         base.OnCollectionChanged(e);
     }
 
-    public void AddRange(IEnumerable<T> list)
+    public void AddRange(IEnumerable<T>? list)
     {
         if(list == null)
             return;
@@ -88,7 +87,7 @@ public class ObservableCollectionEx<T> : ObservableCollection<T> where T : INoti
             SuppressNotification = false;
     }
 
-    public void RemoveRange(IEnumerable<T> list)
+    public void RemoveRange(IEnumerable<T>? list)
     {
         if(list == null)
             return;
@@ -119,8 +118,11 @@ public class ObservableCollectionEx<T> : ObservableCollection<T> where T : INoti
         base.ClearItems();
     }
 
-    private void RegisterPropertyChanged(IList items)
+    private void RegisterPropertyChanged(IList? items)
     {
+        if(items == null)
+            return;
+
         foreach(INotifyPropertyChanged item in items)
         {
             if(item != null)
@@ -128,8 +130,11 @@ public class ObservableCollectionEx<T> : ObservableCollection<T> where T : INoti
         }
     }
 
-    private void UnRegisterPropertyChanged(IList items)
+    private void UnRegisterPropertyChanged(IList? items)
     {
+        if (items == null)
+            return;
+
         foreach(INotifyPropertyChanged item in items)
         {
             if(item != null)
@@ -137,7 +142,7 @@ public class ObservableCollectionEx<T> : ObservableCollection<T> where T : INoti
         }
     }
 
-    private void Item_PropertyChanged(object sender, PropertyChangedEventArgs e)
+    private void Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if(SuppressNotification)
         {
@@ -145,7 +150,7 @@ public class ObservableCollectionEx<T> : ObservableCollection<T> where T : INoti
             return;
         }
 
-        // starting with XF 4.8 the fist version of the notification throws an exception
+        // starting with XF 4.8 the first version of the notification throws an exception
         // System.ArgumentOutOfRangeException: 'Index was out of range. Must be non-negative and less than the size of the collection. Parameter name: index'
         try
         {

@@ -1,4 +1,4 @@
-﻿namespace TestProject;
+﻿namespace MvvmEssenceTest;
 
 public class NamespaceInclusionCheckerTests
 {
@@ -15,7 +15,7 @@ public class NamespaceInclusionCheckerTests
     public void Includes_StateUnderTest_ExpectedBehavior(string ns, bool expected)
     {
         // Arrange
-        var namespaceInclusionChecker = new NamespaceInclusionChecker(new [] {"a.b", "a.c.d", "a.e.*", "a.b.*"});
+        var namespaceInclusionChecker = new NamespaceInclusionChecker(["a.b", "a.c.d", "a.e.*", "a.b.*"]);
 
         // Act
         var result = namespaceInclusionChecker.Includes(ns);
@@ -28,7 +28,7 @@ public class NamespaceInclusionCheckerTests
     public void Includes_ReturnsFalseOnEmptyNamespace()
     {
         // Arrange
-        var namespaceInclusionChecker = new NamespaceInclusionChecker(new[] { "a.b", "a.c.d", "a.e.*", "a.b.*" });
+        var namespaceInclusionChecker = new NamespaceInclusionChecker(["a.b", "a.c.d", "a.e.*", "a.b.*"]);
 
         // Act
         var result = namespaceInclusionChecker.Includes(null);
