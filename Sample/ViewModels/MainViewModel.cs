@@ -82,11 +82,11 @@ public class MainViewModel : ViewModelBase
         
         if(response.IsSuccess)
         {
-            await Shell.Current.DisplayAlert("Success", response.Data.ToString(), "OK");
+            await Shell.Current.DisplayAlertAsync("Success", response.Data.ToString(), "OK");
         }
         else
         {
-            await Shell.Current.DisplayAlert("Failed", response.GetFullMessage(), "OK");
+            await Shell.Current.DisplayAlertAsync("Failed", response.GetFullMessage(), "OK");
         }
 
         IsBusy = false;

@@ -14,6 +14,6 @@ public partial class MainPage
 
     private void ExceptionHandler(Exception xcp)
     {
-        Shell.Current.DisplayAlert("Error", xcp.Message, "OK");
+        Shell.Current.DisplayAlertAsync("Error", xcp.Message, "OK");
     }
 }
